@@ -4,6 +4,7 @@ using UnityEngine;
 // 알맞은 애니메이션을 재생하고 IK를 사용해 캐릭터 양손이 총에 위치하도록 조정
 public class PlayerShooter : MonoBehaviour {
     public Gun gun; // 사용할 총
+    public Gun secondGun; // 보조 총
     public Transform gunPivot; // 총 배치의 기준점
     public Transform leftHandMount; // 총의 왼쪽 손잡이, 왼손이 위치할 지점
     public Transform rightHandMount; // 총의 오른쪽 손잡이, 오른손이 위치할 지점
@@ -15,26 +16,39 @@ public class PlayerShooter : MonoBehaviour {
         // 사용할 컴포넌트 가져오기
         playerInput = GetComponent<PlayerInput>();
         playerAnimator = GetComponent<Animator>();
+
+        if (secondGun != null)
+        {
+            secondGun.gameObject.SetActive(false);
+        }
     }
 
     private void OnEnable() {
-        // 슈터가 활성화될 때 총도 함께 활성화
-        gun.gameObject.SetActive(true);
+        // 슈터가 활성화될 때 메인 총 활성화, 보조 총 비활성화
+        if (gun != null) gun.gameObject.SetActive(true);
+        if (secondGun != null) secondGun.gameObject.SetActive(false);
     }
 
     private void OnDisable() {
-        // 슈터가 비활성화될 때 총도 함께 비활성화
-        gun.gameObject.SetActive(false);
+        // 슈터가 비활성화될 때 총들 모두 비활성화
+        if (gun != null) gun.gameObject.SetActive(false);
+        if (secondGun != null) secondGun.gameObject.SetActive(false);
     }
 
     private void Update() {
+        // 마우스 오른쪽 버튼을 누르면 총기 변경
+        if (Input.GetMouseButtonDown(1))
+        {
+            SwapWeapon();
+        }
+
         // 입력을 감지하고 총을 발사하거나 재장전
-        if (playerInput.fire)
+        if (playerInput.fire && gun != null)
         {
             // 발사 입력 감지 시 총 발사
             gun.Fire();
         }
-        else if (playerInput.reload)
+        else if (playerInput.reload && gun != null)
         {
             // 재장전 입력 감지 시 재장전
             if (gun.Reload())
@@ -46,6 +60,27 @@ public class PlayerShooter : MonoBehaviour {
 
         // 남은 탄알 UI 갱신
         UpdateUI();
+    }
+
+    private void SwapWeapon() {
+        if (secondGun == null) return;
+
+        // 두 총의 활성 상태 토글
+        bool isSecondActive = secondGun.gameObject.activeSelf;
+        
+        if (gun != null)
+        {
+            gun.gameObject.SetActive(isSecondActive);
+        }
+        secondGun.gameObject.SetActive(!isSecondActive);
+
+        // 총 참조 교환
+        Gun temp = gun;
+        gun = secondGun;
+        secondGun = temp;
+
+        // 총기 변경 시 Reloading 애니메이션 재생
+        playerAnimator.SetTrigger("Reload");
     }
 
     // 탄알 UI 갱신

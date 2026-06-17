@@ -18,10 +18,11 @@ public class Gun : MonoBehaviour {
     public ParticleSystem shellEjectEffect; // 탄피 배출 효과
 
     private LineRenderer bulletLineRenderer; // 탄알 궤적을 그리기 위한 렌더러
-
     private AudioSource gunAudioPlayer; // 총 소리 재생기
 
     public GunData gunData; // 총의 현재 데이터
+    public Color trailColor = Color.yellow; // 총알 궤적 색상
+    public float soundPitch = 1.0f; // 효과음 피치
 
     private float fireDistance = 50f; // 사정거리
 
@@ -120,8 +121,13 @@ public class Gun : MonoBehaviour {
         // 탄피 배출 효과 재생
         shellEjectEffect.Play();
 
-        // 총격 소리 재생
+        // 총격 소리 재생 (피치 적용)
+        gunAudioPlayer.pitch = soundPitch;
         gunAudioPlayer.PlayOneShot(gunData.shotClip);
+
+        // 선 색상 설정
+        bulletLineRenderer.startColor = trailColor;
+        bulletLineRenderer.endColor = trailColor;
 
         // 선의 시작점은 총구의 위치
         bulletLineRenderer.SetPosition(0, fireTransform.position);
@@ -135,6 +141,9 @@ public class Gun : MonoBehaviour {
 
         // 라인 렌더러를 비활성화하여 탄알 궤적을 지움
         bulletLineRenderer.enabled = false;
+        
+        // 피치 복원
+        gunAudioPlayer.pitch = 1.0f;
     }
 
     // 재장전 시도
@@ -156,7 +165,9 @@ public class Gun : MonoBehaviour {
     private IEnumerator ReloadRoutine() {
         // 현재 상태를 재장전 중 상태로 전환
         state = State.Reloading;
-        // 재장전 소리 재생
+        
+        // 재장전 소리 재생 (피치 적용)
+        gunAudioPlayer.pitch = soundPitch;
         gunAudioPlayer.PlayOneShot(gunData.reloadClip);
 
         // 재장전 소요 시간만큼 처리 쉬기
@@ -179,5 +190,8 @@ public class Gun : MonoBehaviour {
 
         // 총의 현재 상태를 발사 준비된 상태로 변경
         state = State.Ready;
+        
+        // 피치 복원
+        gunAudioPlayer.pitch = 1.0f;
     }
 }
